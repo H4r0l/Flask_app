@@ -1,49 +1,33 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, session 
+from database import User, Product
+from os import environ
+
 
 app = Flask(__name__)
 
-app.secret_key = "secretEnv"
-
-def login_required(f):
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        if 'logged_in' in session:
-            return f(*args, **kwargs)
-        else:
-            flash("You need to login first")
-            return redirect(url_for('login'))
-    return wrap
-
+app.secret_key = environ.get("SECRET_KEY")
 
 @app.route("/")
-@login_required
-def home():
-    return render_template("home.html")
-
-@app.route("/welcome")
-def welcome():
+def index():
     return render_template("index.html")
 
-@app.route("/login", methods=["GET","POST"])
-def login():
-    error = None
+@app.route("/register", methods=["GET","POST"])
+def register():
     if request.method == "POST":
-        if request.form["username"] != "admin" or request.form["password"] != "admin":
-            error = "Invalid Credentials. Please try again."
-        else:
-            session["logged_in"] = True
-            flash("You were logged in")
-            return redirect(url_for("home"))
-    return render_template("login.html", error=error)
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-@app.route("/logout")
-@login_required
-def logout():
-    session.pop("logged_in", None)
-    flash("You were logged out")
-    return redirect(url_for("welcome"))
+        if username and password:
+            user = User.create_user(username, password)
+            session["user_id"] = user.id
 
+            return redirect(url_for("products"))
+    return render_template("register.html")
 
-if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+@app.route("/products")
+def products():
+    user =  User.get(session["user_id"])
+
+    _products = user.products
+
+    return render_template("products/index.html", products=_products)
