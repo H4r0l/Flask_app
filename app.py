@@ -31,3 +31,29 @@ def products():
     _products = user.products
 
     return render_template("products/index.html", products=_products)
+
+@app.route("/products/create", methods=["GET","POST"])
+def product_create():
+    if request.method == "POST":
+        name = request.form.get("name")
+        price = request.form.get("price")
+
+        if name and price:
+            user = User.get(session["user_id"])
+
+            Product.create(name=name, price=price, user=user)
+            return redirect(url_for("products"))
+    return render_template("products/create.html")
+
+@app.route("/products/update/<int:product_id>", methods=["GET","POST"])
+def product_update(product_id: int):
+    _product = Product.select().where(Product.id == product_id).first()
+
+    if request.method == "POST":
+        _product.name = request.form.get("name")
+        _product.price = request.form.get("price")
+        _product.save()
+        return redirect(url_for("products"))
+
+    return render_template("products/update.html", product=_product)
+

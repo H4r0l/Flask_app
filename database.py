@@ -38,5 +38,9 @@ class Product(Model):  # Tables
         database = db
         db_table = "products"
 
+    @property
+    def price_format(self):
+        return f"${self.price} Dollars"
+
 
 db.create_tables([User, Product])
