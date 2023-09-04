@@ -57,3 +57,8 @@ def product_update(product_id: int):
 
     return render_template("products/update.html", product=_product)
 
+@app.route("/products/delete/<int:product_id>")
+def product_delete(product_id: int):
+    Product.delete_by_id(product_id)
+
+    return redirect(url_for("products"))
